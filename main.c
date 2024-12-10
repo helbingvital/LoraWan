@@ -1,4 +1,5 @@
 #include "msp430g2553.h"
+
 #include <msp430.h>
 #include <LoraWAN2.h>
 #include <ds18b20.h>
@@ -50,7 +51,7 @@ void main(void) {
     }
 
 
-    uint16_t sensorValue = 0;
+    //uint16_t sensorValue = 0;
     float temp = 0;
     while (1) {
         // Optionale Verarbeitung empfangener Daten oder Fehlerbehandlung
@@ -59,7 +60,9 @@ void main(void) {
 
         // Nachricht formatieren
         char message[50];              // Puffer für die formatierte Nachricht
-        sprintf(message, "AT+MSG=\"C: Sensor Value: %f\"\r\n", temp);
+        sprintf(message, "AT+MSG=\"C: Sensor Value: ");
+        // gcvt(temp, 4, message+ len(message));
+        //sprintf(message+len(message), "\r\n");
 
         // Nachricht über UART senden
         UART_send_string(message);

@@ -33,7 +33,7 @@ uint8_t ds18b20_reset(void)
     return 0;
 }
  
- float ds18b20_get_temp(void){
+ int ds18b20_get_temp(void){
     volatile uint16_t temp = 0;
     ds18b20_reset();
     ds18b20_write_byte(DS18B20_SKIP_ROM);           // skip ROM command
@@ -45,7 +45,7 @@ uint8_t ds18b20_reset(void)
     ds18b20_write_byte(DS18B20_READ_SCRATCHPAD);    // read scratchpad command
     temp = ds18b20_read_temp_registers();
 
-    return(temp / 16.0);
+    return(temp / 16);
  }
 
  void ds18b20_write_bit(uint8_t bit)
@@ -136,7 +136,7 @@ uint64_t readRom (void){
 }
 
 //**********************************************************************************************************************************************************
-
+/*
 char* show_temp(float temp)
 {
     uint16_t aux;
@@ -161,4 +161,4 @@ char* show_temp(float temp)
 //    showChar(aux+48,pos4);
     return message;
 }
-
+*/
