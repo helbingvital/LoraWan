@@ -13,6 +13,8 @@ void UART_RXTEST();
 void UART_TXTEST();
 void selftest(Mode mode); 
 */
+char *name[6];
+char *synonym[1];
 
 void main(void) {
     WDTCTL = WDTPW | WDTHOLD;  // Watchdog-Timer stoppen
@@ -33,26 +35,33 @@ void main(void) {
 
 //Getting Started: use selftest(NONE) to get ID, if you have 2 devices use selftest(SEND) and selftest(RECEIVE) to check functionality
 //    selftest(SEND);
+   setModem('o');
    setup_gateway(); //Ausführen wenn Microcontroller neu gestartet ist.
 
 //Send Data
-    UART_send_string("AT+MSG=\"Hello, LoRa! This is Celina\"\r\n"); // Sendet eine Nachricht über LoRa
+    char tempC[50]; // Puffer für die formatierte Nachrichten
+    // Nachricht formatieren
+    sprintf(tempC, "AT+MSG=\"Hello, LoRa! This is %s\"\r\n", name);
+    // Nachricht senden
+    UART_send_string(tempC);
     __delay_cycles(1000000);
 
 //Sensor
     init_pins();
     P1DIR |= POWER_PIN;
     int check = ds18b20_reset();
-    if (check){
-        UART_send_string("AT+MSG=\"C: Temperature Sensor is connected.\"\r\n");
-    }else{
-        UART_send_string("AT+MSG=\"C: Temperature Sensor not is connected.\"\r\n");
+    // Überprüfen und Nachricht formatieren
+    if (check) {
+        sprintf(tempC, "AT+MSG=\"%s: Temperature Sensor is connected.\"\r\n", synonym);
+    } else {
+        sprintf(tempC, "AT+MSG=\"%s: Temperature Sensor is not connected.\"\r\n", synonym);    }
 
-    }
+    // Nachricht senden
+    UART_send_string(tempC);
 
 
     //uint16_t sensorValue = 0;
-    float temp = 0;
+    int temp = 0;
     while (1) {
         // Optionale Verarbeitung empfangener Daten oder Fehlerbehandlung
         temp = ds18b20_get_temp();
@@ -60,7 +69,7 @@ void main(void) {
 
         // Nachricht formatieren
         char message[50];              // Puffer für die formatierte Nachricht
-        sprintf(message, "AT+MSG=\"C: Sensor Value: ");
+        sprintf(message, "AT+MSG=\"%s: Sensor Value: %d",synonym,temp);
         // gcvt(temp, 4, message+ len(message));
         //sprintf(message+len(message), "\r\n");
 
@@ -136,7 +145,12 @@ void UART_RXTEST() {
 void setup_gateway(void){
 //    Mode test = 0;   
 //    selftest(NONE);
-    UART_send_string("AT+KEY=APPKEY,\"B045041358B83A5E76F3C6312184CCC8\"\r\n"); // Set AppKey
+    if (synonym == 'c') {
+        UART_send_string("AT+KEY=APPKEY,\"B045041358B83A5E76F3C6312184CCC8\"\r\n"); // Set AppKey
+    }
+    if (synonym == 'o') {
+        UART_send_string("AT+KEY=APPKEY,\"2B7E151628AED2A6ABF7158809CF4F3C\"\r\n"); // Set AppKey
+    }
     __delay_cycles(1000000);
     UART_send_string("AT+DR=EU868\r\n");
     __delay_cycles(1000000);
@@ -186,6 +200,21 @@ void delay_us(unsigned int us) {
     }
 }
 
+void setModem(char input) {
+    // Switch-Case-Abfrage
+    switch (input) {
+        case 'c':
+            // Parameter für 'c' setzen
+            sprintf(synonym, "C");
+            sprintf(name, "Celina");
+            break;
+        case 'o':
+            // Parameter für 'o' setzen
+            sprintf(synonym, "O");
+            sprintf(name, "Oliver");
+            break;
+    }
+}
 
 /*
 
