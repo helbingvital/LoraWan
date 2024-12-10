@@ -1,4 +1,5 @@
- #include <ds18b20.h>
+ #include "intrinsics.h"
+#include <ds18b20.h>
  
  // GPIO Konfiguration
 void init_pins() {
@@ -33,19 +34,19 @@ uint8_t ds18b20_reset(void)
     return 0;
 }
  
- int ds18b20_get_temp(void){
+ uint16_t ds18b20_get_temp(void){
     volatile uint16_t temp = 0;
     ds18b20_reset();
     ds18b20_write_byte(DS18B20_SKIP_ROM);           // skip ROM command
     ds18b20_write_byte(DS18B20_CONVERT_T);          // convert T command
     DS18B20_HI
-    DELAY_MS(800);                                  // at least 750 ms for the default 12-bit resolution
+//    DELAY_MS(800);                                  // at least 750 ms for the default 12-bit resolution
+    __delay_cycles(800000);
     ds18b20_reset();
     ds18b20_write_byte(DS18B20_SKIP_ROM);           // skip ROM command
     ds18b20_write_byte(DS18B20_READ_SCRATCHPAD);    // read scratchpad command
     temp = ds18b20_read_temp_registers();
     return temp;
-    // return(temp / 16);
  }
 
  void ds18b20_write_bit(uint8_t bit)

@@ -48,7 +48,7 @@ void main(void) {
 
 //Sensor
     init_pins();
-    P1DIR |= POWER_PIN;
+    P1OUT |= POWER_PIN; //power on
     int check = ds18b20_reset();
     // Überprüfen und Nachricht formatieren
     if (check) {
@@ -60,19 +60,18 @@ void main(void) {
     UART_send_string(tempC);
 
 
-    //uint16_t sensorValue = 0;
-    int temp = 0;
+    uint16_t sensorValue = 0;
+
     while (1) {
         // Optionale Verarbeitung empfangener Daten oder Fehlerbehandlung
-        temp = ds18b20_get_temp();
-        //sensorValue = show_temp(temp);
-
+        sensorValue = ds18b20_get_temp();
+        //Verarbeitung: Rechtshift 4bit, vernachlaessigt nachkommastelle. 
+        //Dann AND operation mit 0000 0000 1111 1111 um nur die letzten 8 bit zu betrachten
+        sensorValue = sensorValue >> 4;
+        sensorValue &= 0x00FF;
         // Nachricht formatieren
         char message[50];              // Puffer für die formatierte Nachricht
-        sprintf(message, "AT+MSG=\"%s: Sensor Value: %d",synonym,temp);
-        // gcvt(temp, 4, message+ len(message));
-        //sprintf(message+len(message), "\r\n");
-
+        sprintf(message, "AT+MSG=\"%s: Sensor Value: %d",synonym,sensorValue);
         // Nachricht über UART senden
         UART_send_string(message);
          __delay_cycles(10000000);
