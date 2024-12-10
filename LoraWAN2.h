@@ -17,6 +17,7 @@ void setup_gateway();
 
 void init_Sensor(void);
 uint16_t read_Sensor(void);
+void setModem(char input);
 
 /*
 // 1-Wire Protokoll: Delay-Funktion

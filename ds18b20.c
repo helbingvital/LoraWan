@@ -47,7 +47,6 @@ uint8_t ds18b20_reset(void)
     ds18b20_write_byte(DS18B20_READ_SCRATCHPAD);    // read scratchpad command
     temp = ds18b20_read_temp_registers();
     return temp;
-    //return(temp / 16);
  }
 
  void ds18b20_write_bit(uint8_t bit)
