@@ -18,11 +18,12 @@
 
 
 // Defines to configure pins
-#define DS18B20_PORT_DIR P1DIR
+#define DS18B20_PORT_DIR P1DIR 
 #define DS18B20_PORT_OUT P1OUT
 #define DS18B20_PORT_IN  P1IN
 #define DS18B20_PORT_REN P1REN
-#define DS18B20_PORT_PIN BIT4
+#define DS18B20_PORT_PIN BIT4 //data pin
+
 #define DS18B20_LO  { DS18B20_PORT_DIR |= DS18B20_PORT_PIN; DS18B20_PORT_REN &= ~DS18B20_PORT_PIN; DS18B20_PORT_OUT &= ~DS18B20_PORT_PIN; }
 #define DS18B20_HI  { DS18B20_PORT_DIR |= DS18B20_PORT_PIN; DS18B20_PORT_REN &= ~DS18B20_PORT_PIN; DS18B20_PORT_OUT |= DS18B20_PORT_PIN; }
 #define DS18B20_RLS { DS18B20_PORT_DIR &= ~DS18B20_PORT_PIN; DS18B20_PORT_REN |= DS18B20_PORT_PIN; DS18B20_PORT_OUT  |= DS18B20_PORT_PIN; }
@@ -39,7 +40,7 @@ void ds18b20_write_byte(uint8_t);
 uint8_t ds18b20_read_byte();
 uint16_t ds18b20_read_temp_registers(void);
 uint64_t ds18b20_read_rom (void);
-int ds18b20_get_temp(void);
+uint16_t ds18b20_get_temp(void);
 //char* show_temp(float);
 void delay_us(uint16_t);
 void delay_ms(uint16_t);

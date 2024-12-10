@@ -33,7 +33,7 @@ void main(void) {
 
 //Getting Started: use selftest(NONE) to get ID, if you have 2 devices use selftest(SEND) and selftest(RECEIVE) to check functionality
 //    selftest(SEND);
-   setup_gateway(); //Ausführen wenn Microcontroller neu gestartet ist.
+//   setup_gateway(); //Ausführen wenn Microcontroller neu gestartet ist.
 
 //Send Data
     UART_send_string("AT+MSG=\"Hello, LoRa! This is Celina\"\r\n"); // Sendet eine Nachricht über LoRa
@@ -41,7 +41,7 @@ void main(void) {
 
 //Sensor
     init_pins();
-    P1DIR |= POWER_PIN;
+    P1OUT |= POWER_PIN; //power on
     int check = ds18b20_reset();
     if (check){
         UART_send_string("AT+MSG=\"C: Temperature Sensor is connected.\"\r\n");
@@ -51,19 +51,20 @@ void main(void) {
     }
 
 
-    //uint16_t sensorValue = 0;
-    float temp = 0;
+    uint16_t sensorValue = 0;
+    // int temp = 0;
     while (1) {
         // Optionale Verarbeitung empfangener Daten oder Fehlerbehandlung
-        temp = ds18b20_get_temp();
-        //sensorValue = show_temp(temp);
-
+        sensorValue = ds18b20_get_temp();
+        //Verarbeitung: Rechtshift 4bit, vernachlaessigt nachkommastelle. 
+        //Dann AND operation mit 0000 0000 1111 1111 um nur die letzten 8 bit zu betrachten
+        sensorValue = sensorValue >> 4;
+        sensorValue &= 0x00FF;
         // Nachricht formatieren
         char message[50];              // Puffer für die formatierte Nachricht
-        sprintf(message, "AT+MSG=\"C: Sensor Value: ");
-        // gcvt(temp, 4, message+ len(message));
-        //sprintf(message+len(message), "\r\n");
-
+        //sprintf(message, "AT+MSG=\"C: Sensor Value: %d \r\n", temp);
+       
+        sprintf(message, "AT+MSG=\"%d\"\r\n", sensorValue);
         // Nachricht über UART senden
         UART_send_string(message);
          __delay_cycles(10000000);
