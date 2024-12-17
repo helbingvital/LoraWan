@@ -4,21 +4,15 @@
 #include <LoraWAN2.h>
 #include <ds18b20.h>
 
- /*
-void setup_gateway(void);
-void init_UART(void);
-void UART_send_string(const char *str);
-void UART_send_char(char c);
-void UART_RXTEST();
-void UART_TXTEST();
-void selftest(Mode mode); 
-*/
+
 char *name[6];
 char *synonym[1];
 
 void main(void) {
-    WDTCTL = WDTPW | WDTHOLD;  // Watchdog-Timer stoppen
+    setUser('c');
 
+    //Set Up Microcontroller
+    WDTCTL = WDTPW | WDTHOLD;  // Watchdog-Timer stoppen
     // Taktkonfiguration (falls notwendig, z.B. auf 1 MHz setzen)
     if (CALBC1_1MHZ==0xFF) {   // Wenn keine Kalibrierwerte vorhanden sind
         while(1);               // Hängen bleiben, da nicht kalibriert
@@ -28,40 +22,32 @@ void main(void) {
     DCOCTL = CALDCO_1MHZ;
 
     init_UART();                // UART initialisieren
+    P1DIR |= LED;                            // Set LED pin to output direction
 
-    //LEDs
-    P1DIR |= BIT6;                            // Set P1.6 (BIT6) to output direction
-    P1DIR |= BIT0;
+    /*Getting Started: 
+    Use selftest(NONE) to get ID, if you have 2 devices use selftest(SEND) and selftest(RECEIVE) to check functionality
+    selftest(SEND);*/
 
-//Getting Started: use selftest(NONE) to get ID, if you have 2 devices use selftest(SEND) and selftest(RECEIVE) to check functionality
-//    selftest(SEND);
-   setModem('o');
-   setup_gateway(); //Ausführen wenn Microcontroller neu gestartet ist.
-
-//Send Data
-    char tempC[50]; // Puffer für die formatierte Nachrichten
-    // Nachricht formatieren
+    //Join Lora Gateway. Only necessary if disconnected. Send Status/Hello Message to Network.
+    setup_gateway(); 
+    char tempC[50]; 
     sprintf(tempC, "AT+MSG=\"Hello, LoRa! This is %s\"\r\n", name);
-    // Nachricht senden
     UART_send_string(tempC);
     __delay_cycles(1000000);
 
-//Sensor
-    init_pins();
-    P1OUT |= POWER_PIN; //power on
+    //Initialize Temperature Sensor and check connection
+    ds18b20_init_pins();    
     int check = ds18b20_reset();
-    // Überprüfen und Nachricht formatieren
     if (check) {
         sprintf(tempC, "AT+MSG=\"%s: Temperature Sensor is connected.\"\r\n", synonym);
     } else {
-        sprintf(tempC, "AT+MSG=\"%s: Temperature Sensor is not connected.\"\r\n", synonym);    }
-
-    // Nachricht senden
+        sprintf(tempC, "AT+MSG=\"%s: Temperature Sensor is not connected.\"\r\n", synonym);    
+    }
     UART_send_string(tempC);
-
-
+    P1OUT |= DS18B20_POWER_PIN; //power on
     uint16_t sensorValue = 0;
 
+    //Main Loop: Reoccurent Temperature Measurements sent via LoraWan
     while (1) {
         // Optionale Verarbeitung empfangener Daten oder Fehlerbehandlung
         sensorValue = ds18b20_get_temp();
@@ -69,15 +55,15 @@ void main(void) {
         //Dann AND operation mit 0000 0000 1111 1111 um nur die letzten 8 bit zu betrachten
         sensorValue = sensorValue >> 4;
         sensorValue &= 0x00FF;
-        // Nachricht formatieren
-        char message[50];              // Puffer für die formatierte Nachricht
-        sprintf(message, "AT+MSG=\"%s: Sensor Value: %d",synonym,sensorValue);
+        // Format message
+        char message[50];
+        sprintf(message, "AT+MSG=\"%s: Sensor Value: %d\"\r\n",synonym,sensorValue);
         // Nachricht über UART senden
         UART_send_string(message);
          __delay_cycles(10000000);
 
-        P1OUT ^= BIT0;                        // Toggle P1.0 using exclusive-OR        
-
+        // Toggle LED to visualize end of iteration.
+        P1OUT ^= LED;                                
     }
 }
 
@@ -92,7 +78,7 @@ void init_UART(void) {
     UCA0BR1 = 0;
     UCA0MCTL = UCBRS0;          // Modulation für 9600 Baud
     UCA0CTL1 &= ~UCSWRST;       // USCI aus Reset holen
-    IE2 |= UCA0RXIE;            // RX-Interrupt aktivieren (optional)
+    IE2 |= UCA0RXIE;            // RX-Interrupt aktivieren
 }
 
 void UART_send_string(const char *str) {
@@ -199,7 +185,7 @@ void delay_us(unsigned int us) {
     }
 }
 
-void setModem(char input) {
+void setUser(char input) {
     // Switch-Case-Abfrage
     switch (input) {
         case 'c':

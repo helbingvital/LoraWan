@@ -2,23 +2,23 @@
 #include <ds18b20.h>
  
  // GPIO Konfiguration
-void init_pins() {
-    P1DIR |= POWER_PIN;     // P1.5 als Ausgang (Power)
-    P1OUT &= ~POWER_PIN;    // Power aus
-    P1DIR |= DQ_PIN;        // DQ als Ausgang
-    P1OUT |= DQ_PIN;        // Setze DQ auf High (Pull-Up aktiv)
+void ds18b20_init_pins() {
+    P1DIR |= DS18B20_POWER_PIN;     // Set Power Pin of temperature sensor as output on microcontroller
+    P1OUT &= ~DS18B20_POWER_PIN;    // Set output of power pin to low, power off
+    P1DIR |= DS18B20_PORT_PIN;        // Set Data Pin as output
+    P1OUT |= DS18B20_PORT_PIN;        // Set Datapin as High
 }
 
 // DS18B20: Reset Impuls
 /*
 unsigned char ds18b20_reset() {
     unsigned char presence;
-    P1OUT &= ~DQ_PIN;       // DQ auf Low ziehen
-    P1DIR |= DQ_PIN;        // DQ als Ausgang
+    P1OUT &= ~DS18B20_PORT_PIN;       // DQ auf Low ziehen
+    P1DIR |= DS18B20_PORT_PIN;        // DQ als Ausgang
     DELAY_US(480);          // Halte Low für 480µs
-    P1DIR &= ~DQ_PIN;       // DQ als Eingang
+    P1DIR &= ~DS18B20_PORT_PIN;       // DQ als Eingang
     DELAY_US(70);           // Warte 70µs
-    presence = (P1IN & DQ_PIN); // Lese Präsenzsignal
+    presence = (P1IN & DS18B20_PORT_PIN); // Lese Präsenzsignal
     DELAY_US(410);          // Warte den Rest der Periode
     return presence == 0 ? 1 : 0; // 1 = Sensor vorhanden, 0 = kein Sensor
 }*/
@@ -40,8 +40,8 @@ uint8_t ds18b20_reset(void)
     ds18b20_write_byte(DS18B20_SKIP_ROM);           // skip ROM command
     ds18b20_write_byte(DS18B20_CONVERT_T);          // convert T command
     DS18B20_HI
-//    DELAY_MS(800);                                  // at least 750 ms for the default 12-bit resolution
-    __delay_cycles(800000);
+    DELAY_MS(800);                                  // at least 750 ms for the default 12-bit resolution
+//    __delay_cycles(800000);
     ds18b20_reset();
     ds18b20_write_byte(DS18B20_SKIP_ROM);           // skip ROM command
     ds18b20_write_byte(DS18B20_READ_SCRATCHPAD);    // read scratchpad command
@@ -137,29 +137,3 @@ uint64_t readRom (void){
 }
 
 //**********************************************************************************************************************************************************
-/*
-char* show_temp(float temp)
-{
-    uint16_t aux;
-    char message[50];              // Puffer für die formatierte Nachricht
-    aux=temp/10;
-//    showChar(aux+48,pos1);
-    sprintf(message, "%d", aux+48);
-
-    aux=(int16_t)temp%10;
-    sprintf(message + strlen(message), "%d", aux+48);
-
-//    showChar(aux+48,pos2);
-//    LCDMEM[pos2+1] |= 0x01;
-
-    volatile float mantisa = temp - (int16_t)temp;
-    volatile uint16_t dosDecimales = mantisa * 100;
-    aux=((int)dosDecimales)/10;
-    sprintf(message+ strlen(message), "%d", aux+48);
- //   showChar(aux+48,pos3);
-    aux=((int)dosDecimales)%10;
-    sprintf(message+ strlen(message), "%d", aux+48);
-//    showChar(aux+48,pos4);
-    return message;
-}
-*/

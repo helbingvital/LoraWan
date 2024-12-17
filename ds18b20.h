@@ -8,7 +8,6 @@
 
 // DQ-Pin und Power-Pin definieren for temperature sensor
 #define DQ_PIN BIT4 // P1.4
-#define POWER_PIN BIT5 // P1.5
 
 // Commands to handle the sensor
 #define DS18B20_SKIP_ROM             0xCC
@@ -17,12 +16,14 @@
 #define DS1820_READ_ROM              0x33
 
 
-// Defines to configure pins
-#define DS18B20_PORT_DIR P1DIR 
-#define DS18B20_PORT_OUT P1OUT
-#define DS18B20_PORT_IN  P1IN
-#define DS18B20_PORT_REN P1REN
+// Defines to configure pins. Choose according to your hardware.
+#define DS18B20_PORT_DIR P1DIR //used Port for temperature Sensor
+#define DS18B20_PORT_OUT P1OUT //output port
+#define DS18B20_PORT_IN  P1IN //input port
+#define DS18B20_PORT_REN P1REN 
 #define DS18B20_PORT_PIN BIT4 //data pin
+#define DS18B20_POWER_PIN BIT5 // P1.5
+
 
 #define DS18B20_LO  { DS18B20_PORT_DIR |= DS18B20_PORT_PIN; DS18B20_PORT_REN &= ~DS18B20_PORT_PIN; DS18B20_PORT_OUT &= ~DS18B20_PORT_PIN; }
 #define DS18B20_HI  { DS18B20_PORT_DIR |= DS18B20_PORT_PIN; DS18B20_PORT_REN &= ~DS18B20_PORT_PIN; DS18B20_PORT_OUT |= DS18B20_PORT_PIN; }
@@ -31,7 +32,7 @@
 
 // Function prototypes
 //void ds18b20_init_port(void);
-void init_pins();
+void ds18b20_init_pins();
 
 uint8_t ds18b20_reset();
 void ds18b20_write_bit(uint8_t);
@@ -41,7 +42,6 @@ uint8_t ds18b20_read_byte();
 uint16_t ds18b20_read_temp_registers(void);
 uint64_t ds18b20_read_rom (void);
 uint16_t ds18b20_get_temp(void);
-//char* show_temp(float);
 void delay_us(uint16_t);
 void delay_ms(uint16_t);
 void set_clock(void);
