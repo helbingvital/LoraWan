@@ -23,7 +23,7 @@ typedef enum{
  * @param mode Used to specify if Transmitter (SEND), Receiver (RECEIVER) or no (NONE) should be tested additionally
  */
 void selftest(Mode mode);
-void setup_gateway(char* synonym);
+void setup_gateway(char synonym);
 
 uint16_t read_Sensor(void);
 void setUser(char input);

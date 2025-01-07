@@ -61,7 +61,7 @@ void UART_RXTEST() {
 
 }
 
-void setup_gateway(char* synonym){
+void setup_gateway(char synonym){
 //   selftest(NONE); //
     if (synonym == 'c') {
         UART_send_string("AT+KEY=APPKEY,\"B045041358B83A5E76F3C6312184CCC8\"\r\n"); // Set AppKey
@@ -77,7 +77,7 @@ void setup_gateway(char* synonym){
     UART_send_string("AT+MODE=LWOTAA\r\n");
     __delay_cycles(1000000);
     UART_send_string("AT+JOIN\r\n");
-    __delay_cycles(8000000);
+    __delay_cycles(10000000);
 }
 
 void selftest(Mode mode){
