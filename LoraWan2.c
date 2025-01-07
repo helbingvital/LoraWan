@@ -63,10 +63,10 @@ void UART_RXTEST() {
 
 void setup_gateway(char synonym){
 //   selftest(NONE); //
-    if (synonym == 'c') {
+    if (synonym == 'C') {
         UART_send_string("AT+KEY=APPKEY,\"B045041358B83A5E76F3C6312184CCC8\"\r\n"); // Set AppKey
     }
-    if (synonym == 'o') {
+    if (synonym == 'O') {
         UART_send_string("AT+KEY=APPKEY,\"2B7E151628AED2A6ABF7158809CF4F3C\"\r\n"); // Set AppKey
     }
     __delay_cycles(1000000);

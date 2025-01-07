@@ -18,13 +18,13 @@ typedef enum{
 } Mode;
 
 /**
- * @brief Test Lora modula
+ * @brief Test Lora module
  * Request Version, DevAddr(ABP), DevEui(OTAA) and AppEui(OTAA) from module via UART. Option to switch module into test mode.
- * @param mode Used to specify if Transmitter (SEND), Receiver (RECEIVER) or no (NONE) should be tested additionally
+ * @param mode Used to specify if Transmitter (SEND), Receiver (RECEIVER) or nothing (NONE) should be tested additionally
  */
 void selftest(Mode mode);
 void setup_gateway(char synonym);
 
 uint16_t read_Sensor(void);
-void setUser(char input);
+void setUser();
 

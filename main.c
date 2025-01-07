@@ -5,18 +5,15 @@
 #include <ds18b20.h>
 
 #define STATUS_MSG "$" // $ Asci = 0x24
-//#define DATA_MSG 0xC0
 #define DATA_MSG "C0"
-#define USER "C"
+#define USER 'C'
 
 char name[6];
 char *synonym[1];
 
 void main(void) {
-    setUser('c');
-    char test[10] = "AB"; //test = [65,66,...] "AB"
-    uint16_t test_int = 996;
-    sprintf(test+2, "%d", test_int);  //test = [65,66,57,57,54] "AB996" Ich will aber "AB03E4"
+    setUser();
+    char hex_lookup[16] = "0123456789ABCDEF";
     
     //Set Up Microcontroller
     WDTCTL = WDTPW | WDTHOLD;  // Watchdog-Timer stoppen
@@ -31,12 +28,10 @@ void main(void) {
     init_UART();                // UART initialisieren
     P1DIR |= LED;                            // Set LED pin to output direction
 
-    /*Getting Started: 
-    Use selftest(NONE) to get ID, if you have 2 devices use selftest(SEND) and selftest(RECEIVE) to check functionality
-    selftest(SEND);*/
-
-    //Join Lora Gateway. Only necessary if disconnected. Send Status/Hello Message to Network.
-//    setup_gateway(synonym); 
+//    Getting Started: 
+//    selftest(NONE);
+    //Join Lora Gateway. Only necessary if disconnected.
+    setup_gateway(USER); 
     char status_msg[50]; 
     sprintf(status_msg, "AT+MSG=\"%sHello, LoRa! This is %s\"\r\n", STATUS_MSG, name);
     UART_send_string(status_msg);
@@ -46,18 +41,13 @@ void main(void) {
     ds18b20_init_pins();    
     int check = ds18b20_reset();
     if (check) {
-        sprintf(status_msg, "AT+MSG=\"%s%s: Temperature Sensor is connected.\"\r\n", STATUS_MSG, synonym);
+        sprintf(status_msg, "AT+MSG=\"%s%c: Temperature Sensor is connected.\"\r\n", STATUS_MSG, USER);
     } else {
-        sprintf(status_msg, "AT+MSG=\"%s%s: Temperature Sensor is not connected.\"\r\n", STATUS_MSG, synonym);    
+        sprintf(status_msg, "AT+MSG=\"%s%c: Temperature Sensor is not connected.\"\r\n", STATUS_MSG, USER);    
     }
     UART_send_string(status_msg);
     __delay_cycles(1000000);
-
-    char hextest[50];
-    sprintf(hextest, "AT+MSGHEX=\"%s%d\"\r\n", DATA_MSG, 336); //336 = 0x0150 -> 21 Celsius //macht C0336, dann padding mit 0 also 0C0336 weil keine halben bytes, daher ID falsch
-    UART_send_string(hextest);
-    __delay_cycles(1000000);
-
+    
     P1OUT |= DS18B20_POWER_PIN; //power on
     uint16_t sensorValue = 0;
     uint16_t sensorValue_temp = 0;
@@ -73,8 +63,13 @@ void main(void) {
         // Format message
         char message[50];
 //        sprintf(message, "AT+MSG=\"%s: Sensor Value: %d\"\r\n",synonym,sensorValue);
-        // Nachricht über UART senden
-        sprintf(message, "AT+MSGHEX=\"%s%d\"\r\n", DATA_MSG, sensorValue);
+        char char_3 = hex_lookup[(sensorValue & 0x000F)];
+        sensorValue = sensorValue >> 4;
+        char char_2 = hex_lookup[(sensorValue & 0x000F)];
+        sensorValue = sensorValue >> 4;
+        char char_1 = hex_lookup[(sensorValue & 0x000F)];
+
+        sprintf(message, "AT+MSGHEX=\"%s0%c%c%c\"\r\n", DATA_MSG, char_1, char_2, char_3);
         UART_send_string(message);
          __delay_cycles(10000000);
 
@@ -83,17 +78,13 @@ void main(void) {
     }
 }
 
-void setUser(char input) {
+void setUser() {
     // Switch-Case-Abfrage
-    switch (input) { 
-        case 'c':
-            // Parameter für 'c' setzen
-            sprintf(synonym, "C");
+    switch (USER) { 
+        case 'C':
             sprintf(name, "Celina");
             break;
-        case 'o':
-            // Parameter für 'o' setzen
-            sprintf(synonym, "O");
+        case 'O':
             sprintf(name, "Oliver");
             break;
     }
