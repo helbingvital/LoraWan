@@ -1,38 +1,46 @@
 #include <LoraWAN2.h>
 #include "msp430g2553.h"
 
+/** 
+* Configure UART on MSP430
+*/
 void init_UART(void) {
-    // Setze Pins P1.1 und P1.2 als UART
+    // Set Pin P1.1 and P1.2 as UART
     P1SEL |= BIT1 + BIT2;       // P1.1 = RX, P1.2 = TX
     P1SEL2 |= BIT1 + BIT2;
 
-    // Konfiguration des UARTs
-    UCA0CTL1 |= UCSSEL_2;       // SMCLK als Taktquelle
+    UCA0CTL1 |= UCSSEL_2;       // SMCLK as clock
     UCA0BR0 = 104;              // Baudrate 9600 (1 MHz / 9600)
     UCA0BR1 = 0;
-    UCA0MCTL = UCBRS0;          // Modulation für 9600 Baud
-    UCA0CTL1 &= ~UCSWRST;       // USCI aus Reset holen
-    IE2 |= UCA0RXIE;            // RX-Interrupt aktivieren
+    UCA0MCTL = UCBRS0;          // Modulation for 9600 baud
+    UCA0CTL1 &= ~UCSWRST;       // get USCI from reset 
+    IE2 |= UCA0RXIE;            // activate RX-Interrupt aktivieren
 }
-
+//**********************************************************************************************************************************************************
+/** 
+* Send string via UART to Lora chip and wait 1s
+*/
 void UART_send_string(const char *str) {
     while (*str) {
         UART_send_char(*str++);
     }
+    __delay_cycles(10000000);
 }
-
+//**********************************************************************************************************************************************************
+/** 
+* Send single character via UART*/
 void UART_send_char(char c) {
-    while (!(IFG2 & UCA0TXIFG));  // Warten, bis TX-Buffer leer ist
-    UCA0TXBUF = c;                // Zeichen senden
+    while (!(IFG2 & UCA0TXIFG));  // Wait until TX-Buffer empty
+    UCA0TXBUF = c;                // Write
 }
-
+//**********************************************************************************************************************************************************
 // Optional: ISR für empfangene Zeichen (z.B. um auf die Antwort des Moduls zu warten)
 #pragma vector=USCIAB0RX_VECTOR
 __interrupt void USCI0RX_ISR(void) {
     char received_char = UCA0RXBUF;  // Lese empfangenes Zeichen
     // Hier können Sie empfangene Daten verarbeiten oder speichern
 }
-
+//**********************************************************************************************************************************************************
 void UART_TXTEST() {
     // Set test mode
     UART_send_string("AT+MODE=TEST\r\n");
@@ -45,22 +53,22 @@ void UART_TXTEST() {
     // Send TEXT format packet
     UART_send_string("AT+TEST=TXLRSTR,\"LoRaWAN Modem\"\r\n");
 }
-
+//**********************************************************************************************************************************************************
 void UART_RXTEST() {
     // Set test mode
     UART_send_string("AT+MODE=TEST\r\n");
-    __delay_cycles(1000000);
     // Query test mode, check RF configuration
     UART_send_string("AT+TEST=?\r\n");
-    __delay_cycles(1000000);
     // Set RF Configuration
 //    UART_send_string("AT+TEST=RFCFG,[FREQUENCY],[SF],[BANDWIDTH],[TXPR],[RXPR],[POW],[CRC],[IQ],[NET]\r\n");
     // Enter RX continuous mode
     UART_send_string("AT+TEST=RXLRPKT\r\n");
-    __delay_cycles(1000000);
-
 }
-
+//**********************************************************************************************************************************************************
+/** 
+* Join Lora Gateway. 
+*
+* Make sure to add your personal APPKEY*/
 void setup_gateway(char synonym){
 //   selftest(NONE); //
     if (synonym == 'C') {
@@ -69,23 +77,24 @@ void setup_gateway(char synonym){
     if (synonym == 'O') {
         UART_send_string("AT+KEY=APPKEY,\"2B7E151628AED2A6ABF7158809CF4F3C\"\r\n"); // Set AppKey
     }
-    __delay_cycles(1000000);
     UART_send_string("AT+DR=EU868\r\n");
-    __delay_cycles(1000000);
     UART_send_string("AT+CH=NUM,0-2\r\n");
-    __delay_cycles(1000000);
     UART_send_string("AT+MODE=LWOTAA\r\n");
-    __delay_cycles(1000000);
     UART_send_string("AT+JOIN\r\n");
     __delay_cycles(10000000);
 }
-
+//**********************************************************************************************************************************************************
+/**
+ * Test Lora module
+ *
+ * Request Version, DevAddr(ABP), DevEui(OTAA) and AppEui(OTAA) from module via UART. Option to switch module into test mode.
+ * @param mode Used to specify if Transmitter (SEND), Receiver (RECEIVER) or nothing (NONE) should be tested additionally
+ */
 void selftest(Mode mode){
 // Sende AT-Befehl an Wio E5
-    UART_send_string("AT\r\n");            // Sende "AT" und ein Zeilenumbruch
-    UART_send_string("AT+VER?\r\n");       // Befehl zur Versionsabfrage
+    UART_send_string("AT\r\n");            // Sende "AT" 
+    UART_send_string("AT+VER?\r\n");       // Get Version
     UART_send_string("AT+ID?\r\n");      // Read all, DevAddr(ABP), DevEui(OTAA), AppEui(OTAA)
-    __delay_cycles(1000000);
     switch (mode){
         case SEND:
             UART_TXTEST();
@@ -97,17 +106,31 @@ void selftest(Mode mode){
           break;
         }
 }
-
-uint16_t read_Sensor(void){
-    uint16_t pinValue = 0; // Variable für den Zustand von P1.3
-    pinValue = P1IN;   
-    return  pinValue;
-}
-
+//**********************************************************************************************************************************************************
 // 1-Wire Protokoll: Delay-Funktion
 void delay_us(unsigned int us) {
     while (us--) {
         __delay_cycles(1); // Anpassung je nach Taktrate des MSP430
     }
 }
+//**********************************************************************************************************************************************************
+/**
+ * Format and send SensorValue (from ds18b20 Temperature Sensor) 
+ *
+ * Format SensorValue in order to send as Hex. Lookup Hex representation of each Nibble. Send Hex message to LoraChip via UART.
+ *
+ * @param sensorValue 16bit value. Bit 4-11 specify temperature, bit 12-15 specify fraction (in accordance to ds18b20 specification)
+ */
+void send_Temperature(uint16_t sensorValue){
+    char hex_lookup[16] = "0123456789ABCDEF";
+    // Format message
+    char message[50];
+    char char_3 = hex_lookup[(sensorValue & 0x000F)];
+    sensorValue = sensorValue >> 4;
+    char char_2 = hex_lookup[(sensorValue & 0x000F)];
+    sensorValue = sensorValue >> 4;
+    char char_1 = hex_lookup[(sensorValue & 0x000F)];
 
+    sprintf(message, "AT+MSGHEX=\"%s0%c%c%c\"\r\n", DATA_MSG, char_1, char_2, char_3);
+    UART_send_string(message);
+}

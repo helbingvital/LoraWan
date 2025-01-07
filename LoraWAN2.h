@@ -3,7 +3,9 @@
 
 //Define pins according to your microcontroller hardware
 #define LED BIT0
-
+//Define Identifiers for message types. Should match the identifiers configured in decoder.
+#define STATUS_MSG "$" // $ Asci = 0x24
+#define DATA_MSG "C0"
 
 void init_UART(void);
 void UART_send_string(const char *str);
@@ -28,3 +30,4 @@ void setup_gateway(char synonym);
 uint16_t read_Sensor(void);
 void setUser();
 
+void send_Temperature(uint16_t sensorValue);
