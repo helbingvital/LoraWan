@@ -5,9 +5,9 @@
 #include <stdint.h>
 #include "msp430g2553.h"
 #include <msp430.h>
+#include <hardware_config.h>
 
-// DQ-Pin und Power-Pin definieren for temperature sensor
-#define DQ_PIN BIT4 // P1.4
+
 
 // Commands to handle the sensor
 #define DS18B20_SKIP_ROM             0xCC
@@ -16,16 +16,7 @@
 #define DS1820_READ_ROM              0x33
 
 
-// Defines to configure pins. Choose according to your hardware.
-#define DS18B20_PORT_DIR P1DIR //used Port for temperature Sensor
-#define DS18B20_PORT_OUT P1OUT //output port
-#define DS18B20_PORT_IN  P1IN //input port
-#define DS18B20_PORT_REN P1REN 
-#define DS18B20_PORT_PIN BIT4 //data pin
-#define DS18B20_POWER_PIN BIT5 // P1.5
-
-
-#define DS18B20_LO  { DS18B20_PORT_DIR |= DS18B20_PORT_PIN; DS18B20_PORT_REN &= ~DS18B20_PORT_PIN; DS18B20_PORT_OUT &= ~DS18B20_PORT_PIN; }
+#define DS18B20_LO  { DS18B20_PORT_DIR |= DS18B20_PORT_PIN; DS18B20_PORT_REN &= ~DS18B20_PORT_PIN; DS18B20_PORT_OUT &= ~DS18B20_PORT_PIN; } 
 #define DS18B20_HI  { DS18B20_PORT_DIR |= DS18B20_PORT_PIN; DS18B20_PORT_REN &= ~DS18B20_PORT_PIN; DS18B20_PORT_OUT |= DS18B20_PORT_PIN; }
 #define DS18B20_RLS { DS18B20_PORT_DIR &= ~DS18B20_PORT_PIN; DS18B20_PORT_REN |= DS18B20_PORT_PIN; DS18B20_PORT_OUT  |= DS18B20_PORT_PIN; }
 #define DS18B20_IN  (DS18B20_PORT_IN & DS18B20_PORT_PIN)
@@ -48,13 +39,3 @@ void set_clock(void);
 
 #endif /* DS18B20_H_ */
 
-#ifndef DELAY_H_
-#define DELAY_H_
-
-#define CYCLES_PER_US 1 // depends on the CPU speed
-#define CYCLES_PER_MS (CYCLES_PER_US * 1000)
-
-#define DELAY_US(x) __delay_cycles((x * CYCLES_PER_US))
-#define DELAY_MS(x) __delay_cycles((x * CYCLES_PER_MS))
-
-#endif /* DELAY_H_ */

@@ -1,11 +1,15 @@
+#ifndef LORAWAN_H
+#define LORAWAN_H
+
 #include <stdio.h>
 #include <stdint.h>
+#include <hardware_config.h>
 
-//Define pins according to your microcontroller hardware
-#define LED BIT0
+
+
 //Define Identifiers for message types. Should match the identifiers configured in decoder.
-#define STATUS_MSG "$" // $ Asci = 0x24
-#define DATA_MSG "C0"
+#define STATUS_MSG "$" // $ Asci = 0x24 = 36 (Decimal)
+#define DATA_MSG "C0" // 0xC0 = 192 (Decimal)
 
 void init_UART(void);
 void UART_send_string(const char *str);
@@ -18,16 +22,10 @@ typedef enum{
     SEND,
     RECEIVE
 } Mode;
-
-/**
- * @brief Test Lora module
- * Request Version, DevAddr(ABP), DevEui(OTAA) and AppEui(OTAA) from module via UART. Option to switch module into test mode.
- * @param mode Used to specify if Transmitter (SEND), Receiver (RECEIVER) or nothing (NONE) should be tested additionally
- */
 void selftest(Mode mode);
 void setup_gateway(char synonym);
-
 uint16_t read_Sensor(void);
 void setUser();
-
 void send_Temperature(uint16_t sensorValue);
+
+#endif

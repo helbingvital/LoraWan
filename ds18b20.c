@@ -1,12 +1,13 @@
- #include "intrinsics.h"
+#include "intrinsics.h"
 #include <ds18b20.h>
+#include <hardware_config.h>
  
  // GPIO Konfiguration
 void ds18b20_init_pins() {
     P1DIR |= DS18B20_POWER_PIN;     // Set Power Pin of temperature sensor as output on microcontroller
     P1OUT &= ~DS18B20_POWER_PIN;    // Set output of power pin to low, power off
     P1DIR |= DS18B20_PORT_PIN;        // Set Data Pin as output
-    P1OUT |= DS18B20_PORT_PIN;        // Set Datapin as High
+    P1OUT |= DS18B20_PORT_PIN;        // Set Data pin as High
 }
 
 // DS18B20: Reset Impuls

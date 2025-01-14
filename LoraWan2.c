@@ -5,16 +5,16 @@
 * Configure UART on MSP430
 */
 void init_UART(void) {
-    // Set Pin P1.1 and P1.2 as UART
-    P1SEL |= BIT1 + BIT2;       // P1.1 = RX, P1.2 = TX
-    P1SEL2 |= BIT1 + BIT2;
+    
+    P1SEL |= UART_RX + UART_TX;       
+    P1SEL2 |= UART_RX + UART_TX;
 
     UCA0CTL1 |= UCSSEL_2;       // SMCLK as clock
-    UCA0BR0 = 104;              // Baudrate 9600 (1 MHz / 9600)
+    UCA0BR0 = BAUD;              //Set Baudrate, UCA0BR0 = Clockfreq/Baudrate
     UCA0BR1 = 0;
     UCA0MCTL = UCBRS0;          // Modulation for 9600 baud
     UCA0CTL1 &= ~UCSWRST;       // get USCI from reset 
-    IE2 |= UCA0RXIE;            // activate RX-Interrupt aktivieren
+    IE2 |= UCA0RXIE;            // activate RX-Interrupt 
 }
 //**********************************************************************************************************************************************************
 /** 
@@ -24,7 +24,8 @@ void UART_send_string(const char *str) {
     while (*str) {
         UART_send_char(*str++);
     }
-    __delay_cycles(10000000);
+    DELAY_MS(1000);
+    //__delay_cycles(10000000);
 }
 //**********************************************************************************************************************************************************
 /** 
@@ -46,7 +47,7 @@ void UART_TXTEST() {
     UART_send_string("AT+MODE=TEST\r\n");
     // Query test mode, check RF configuration
     UART_send_string("AT+TEST=?\r\n");
-    // Set RF Configuration
+    // Modify to set RF Configuration
     UART_send_string("AT+TEST=RFCFG,[F],[SF],[BW],[TXPR],[RXPR],[POW],[CRC],[IQ],[NET]\r\n");
     // Send HEX format packet
     // UART_send_string("AT+TEST=TXLRPKT, "00 AA 11 BB 22 CC"\r\n");
@@ -81,7 +82,8 @@ void setup_gateway(char synonym){
     UART_send_string("AT+CH=NUM,0-2\r\n");
     UART_send_string("AT+MODE=LWOTAA\r\n");
     UART_send_string("AT+JOIN\r\n");
-    __delay_cycles(10000000);
+    DELAY_MS(5000);
+    //__delay_cycles(10000000);
 }
 //**********************************************************************************************************************************************************
 /**
@@ -94,7 +96,7 @@ void selftest(Mode mode){
 // Sende AT-Befehl an Wio E5
     UART_send_string("AT\r\n");            // Sende "AT" 
     UART_send_string("AT+VER?\r\n");       // Get Version
-    UART_send_string("AT+ID?\r\n");      // Read all, DevAddr(ABP), DevEui(OTAA), AppEui(OTAA)
+    UART_send_string("AT+ID?\r\n");      // Get DevAddr(ABP), DevEui(OTAA), AppEui(OTAA)
     switch (mode){
         case SEND:
             UART_TXTEST();
@@ -106,20 +108,14 @@ void selftest(Mode mode){
           break;
         }
 }
-//**********************************************************************************************************************************************************
-// 1-Wire Protokoll: Delay-Funktion
-void delay_us(unsigned int us) {
-    while (us--) {
-        __delay_cycles(1); // Anpassung je nach Taktrate des MSP430
-    }
-}
+
 //**********************************************************************************************************************************************************
 /**
  * Format and send SensorValue (from ds18b20 Temperature Sensor) 
  *
  * Format SensorValue in order to send as Hex. Lookup Hex representation of each Nibble. Send Hex message to LoraChip via UART.
  *
- * @param sensorValue 16bit value. Bit 4-11 specify temperature, bit 12-15 specify fraction (in accordance to ds18b20 specification)
+ * @param sensorValue 16bit value. Bit 4-11 specify temperature, bit 12-15 specify fraction (1/16) (in accordance to ds18b20 specification)
  */
 void send_Temperature(uint16_t sensorValue){
     char hex_lookup[16] = "0123456789ABCDEF";

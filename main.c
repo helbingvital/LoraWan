@@ -3,9 +3,12 @@
 #include <msp430.h>
 #include <LoraWAN2.h>
 #include <ds18b20.h>
+#include <hardware_config.h>
 
 
 #define USER 'C'
+#define SETUP_MODE 0 //1 if you want to get DevEui and AppEui
+
 char name[6];
 
 void main(void) {
@@ -13,21 +16,25 @@ void main(void) {
     
     //Set Up Microcontroller
     WDTCTL = WDTPW | WDTHOLD;  // Watchdog-Timer stoppen
-    // Taktkonfiguration (falls notwendig, z.B. auf 1 MHz setzen)
-    if (CALBC1_1MHZ==0xFF) {   // Wenn keine Kalibrierwerte vorhanden sind
-        while(1);               // Hängen bleiben, da nicht kalibriert
+
+    // Clockconfiguration, Use 1 MHZ clock
+    if (CALBC1_1MHZ==0xFF) {   // check if internal clock calibrated
+        while(1);               
     }
     DCOCTL = 0;                 
-    BCSCTL1 = CALBC1_1MHZ;      // Setze DCO auf 1 MHz
-    DCOCTL = CALDCO_1MHZ;
+    BCSCTL1 = CALBC1_1MHZ;      
+    DCOCTL = CALDCO_1MHZ;       // set DCO to 1 MHz
 
-    init_UART();                // UART initialisieren
-    P1DIR |= LED;                            // Set LED pin to output direction
+    init_UART();                // initialize UART 
+    LED1DIR |= LED1;               // Set LED pin to output direction
 
 //    Getting Started: 
-//    selftest(NONE);
+#if SETUP_MODE
+    selftest(NONE);
+#else
     //Join Lora Gateway. Only necessary if disconnected.
     setup_gateway(USER); 
+
     char status_msg[50]; 
     sprintf(status_msg, "AT+MSG=\"%sHello, LoRa! This is %s\"\r\n", STATUS_MSG, name);
     UART_send_string(status_msg);
@@ -42,17 +49,17 @@ void main(void) {
     }
     UART_send_string(status_msg);
     
-    P1OUT |= DS18B20_POWER_PIN; //power on
+    P1OUT |= DS18B20_POWER_PIN; //temperature sensor: power on
     uint16_t sensorValue = 0;
-    uint16_t sensorValue_temp = 0;
 
     //Main Loop: Reoccurent Temperature Measurements sent via LoraWan
     while (1) {
         sensorValue = ds18b20_get_temp();
         send_Temperature(sensorValue);
         // Toggle LED to visualize end of iteration.
-        P1OUT ^= LED;                                
+        P1OUT ^= LED1;                                
     }
+#endif
 }
 
 void setUser() {
