@@ -1,46 +1,6 @@
 #include <LoraWAN2.h>
 #include "msp430g2553.h"
 
-/** 
-* Configure UART on MSP430
-*/
-void init_UART(void) {
-    
-    P1SEL |= UART_RX + UART_TX;       
-    P1SEL2 |= UART_RX + UART_TX;
-
-    UCA0CTL1 |= UCSSEL_2;       // SMCLK as clock
-    UCA0BR0 = BAUD;              //Set Baudrate, UCA0BR0 = Clockfreq/Baudrate
-    UCA0BR1 = 0;
-    UCA0MCTL = UCBRS0;          // Modulation for 9600 baud
-    UCA0CTL1 &= ~UCSWRST;       // get USCI from reset 
-    IE2 |= UCA0RXIE;            // activate RX-Interrupt 
-}
-//**********************************************************************************************************************************************************
-/** 
-* Send string via UART to Lora chip and wait 1s
-*/
-void UART_send_string(const char *str) {
-    while (*str) {
-        UART_send_char(*str++);
-    }
-    DELAY_MS(1000);
-    //__delay_cycles(10000000);
-}
-//**********************************************************************************************************************************************************
-/** 
-* Send single character via UART*/
-void UART_send_char(char c) {
-    while (!(IFG2 & UCA0TXIFG));  // Wait until TX-Buffer empty
-    UCA0TXBUF = c;                // Write
-}
-//**********************************************************************************************************************************************************
-// Optional: ISR für empfangene Zeichen (z.B. um auf die Antwort des Moduls zu warten)
-#pragma vector=USCIAB0RX_VECTOR
-__interrupt void USCI0RX_ISR(void) {
-    char received_char = UCA0RXBUF;  // Lese empfangenes Zeichen
-    // Hier können Sie empfangene Daten verarbeiten oder speichern
-}
 //**********************************************************************************************************************************************************
 void UART_TXTEST() {
     // Set test mode
@@ -71,7 +31,6 @@ void UART_RXTEST() {
 *
 * Make sure to add your personal APPKEY*/
 void setup_gateway(char synonym){
-//   selftest(NONE); //
     if (synonym == 'C') {
         UART_send_string("AT+KEY=APPKEY,\"B045041358B83A5E76F3C6312184CCC8\"\r\n"); // Set AppKey
     }
@@ -83,7 +42,6 @@ void setup_gateway(char synonym){
     UART_send_string("AT+MODE=LWOTAA\r\n");
     UART_send_string("AT+JOIN\r\n");
     DELAY_MS(5000);
-    //__delay_cycles(10000000);
 }
 //**********************************************************************************************************************************************************
 /**
@@ -94,7 +52,7 @@ void setup_gateway(char synonym){
  */
 void selftest(Mode mode){
 // Sende AT-Befehl an Wio E5
-    UART_send_string("AT\r\n");            // Sende "AT" 
+    UART_send_string("AT\r\n");            // Send "AT" 
     UART_send_string("AT+VER?\r\n");       // Get Version
     UART_send_string("AT+ID?\r\n");      // Get DevAddr(ABP), DevEui(OTAA), AppEui(OTAA)
     switch (mode){
@@ -130,3 +88,19 @@ void send_Temperature(uint16_t sensorValue){
     sprintf(message, "AT+MSGHEX=\"%s0%c%c%c\"\r\n", DATA_MSG, char_1, char_2, char_3);
     UART_send_string(message);
 }
+//**********************************************************************************************************************************************************
+/**
+*Send message if button was pressed.
+*/
+void handle_button_press(void){
+    char message[50];
+    sprintf(message, "AT+MSG=\"%s%c:Button was pressed\"\r\n", STATUS_MSG, USER);
+    UART_send_string(message);
+}
+//**********************************************************************************************************************************************************
+// // Optional: ISR für empfangene Zeichen (z.B. um auf die Antwort des Moduls zu warten)
+// #pragma vector=USCIAB0RX_VECTOR
+// __interrupt void USCI0RX_ISR(void) {
+//     char received_char = UCA0RXBUF;  // read received character
+//     // add action on interrupt
+// }
