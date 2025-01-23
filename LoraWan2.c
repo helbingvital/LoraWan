@@ -24,7 +24,7 @@ void UART_send_string(const char *str) {
     while (*str) {
         UART_send_char(*str++);
     }
-    DELAY_MS(1000);
+    DELAY_MS(3000);
     //__delay_cycles(10000000);
 }
 //**********************************************************************************************************************************************************
@@ -82,7 +82,7 @@ void setup_gateway(char synonym){
     UART_send_string("AT+CH=NUM,0-2\r\n");
     UART_send_string("AT+MODE=LWOTAA\r\n");
     UART_send_string("AT+JOIN\r\n");
-    DELAY_MS(5000);
+    DELAY_MS(7000);
     //__delay_cycles(10000000);
 }
 //**********************************************************************************************************************************************************

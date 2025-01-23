@@ -6,7 +6,7 @@
 #include <hardware_config.h>
 
 
-#define USER 'C'
+#define USER 'O'
 #define SETUP_MODE 0 //1 if you want to get DevEui and AppEui
 
 char name[6];
@@ -47,7 +47,10 @@ void main(void) {
     } else {
         sprintf(status_msg, "AT+MSG=\"%s%c: Temperature Sensor is not connected.\"\r\n", STATUS_MSG, USER);    
     }
+    
+    DELAY_MS(6500);
     UART_send_string(status_msg);
+    DELAY_MS(3000);
     
     P1OUT |= DS18B20_POWER_PIN; //temperature sensor: power on
     uint16_t sensorValue = 0;
@@ -56,6 +59,7 @@ void main(void) {
     while (1) {
         sensorValue = ds18b20_get_temp();
         send_Temperature(sensorValue);
+        DELAY_MS(5000);
         // Toggle LED to visualize end of iteration.
         P1OUT ^= LED1;                                
     }
