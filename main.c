@@ -12,8 +12,8 @@
 #endif
 
 #define SETUP_MODE 0 //1 if you want to get DevEui and AppEui
-
 char name[6];
+volatile unsigned int timer_flag = 0;  // Flag to indicate timer interrupt
 
 void main(void) {
     setUser();
@@ -48,11 +48,18 @@ void main(void) {
     uint16_t sensorValue = 0;
 
     //Main Loop: Reoccurent Temperature Measurements sent via LoraWan
+    setup_timer(1);
     while (1) {
-        sensorValue = ds18b20_get_temp();
-        send_Temperature(sensorValue);
-        // Toggle LED to visualize end of iteration.
-        LED_OUT ^= LED1;                                
+        if(timer_flag){
+            sensorValue = ds18b20_get_temp();
+            send_Temperature(sensorValue);
+        //    DELAY_MS(5000);
+        //    __bis_SR_register(LPM0_bits + GIE);
+            // Toggle LED to visualize end of iteration.
+            LED_OUT ^= LED1;    
+            setup_timer(5);            
+        }
+        __bis_SR_register(LPM0_bits + GIE);                
     }
 #endif
 }
@@ -73,5 +80,13 @@ __interrupt void Port_1_ISR(void) {
     if (BUTTON_PIFG & BUTTON_PIN) {
         handle_button_press();  
         BUTTON_PIFG &= ~BUTTON_PIN;
+        __bic_SR_register_on_exit(LPM0_bits);
     }
+}
+
+// Timer ISR
+#pragma vector=TIMER0_A0_VECTOR
+__interrupt void Timer_A(void) {
+    timer_flag = 1;                // Set the flag to indicate 5 seconds elapsed
+    __bic_SR_register_on_exit(LPM0_bits); // Exit LPM0 to allow main loop to run
 }

@@ -44,6 +44,7 @@ void init_button(){
 
     // Enable interrupts
     BUTTON_PINTERRUPT |= BUTTON_PIN;        // Enable interrupt
+    // BUTTON_PINTERRUPT = 0x00;
     BUTTON_PTRIGGER |= BUTTON_PIN;          // Trigger on high-to-low transition (button press)
     BUTTON_PIFG &= ~BUTTON_PIN;             // Clear interrupt flag 
 
@@ -56,7 +57,7 @@ void UART_send_string(const char *str) {
     while (*str) {
         UART_send_char(*str++);
     }
-    DELAY_MS(1000);
+    DELAY_MS(3000);
 }
 //**********************************************************************************************************************************************************
 /** 
@@ -71,3 +72,11 @@ void UART_send_char(char c) {
 void init_LED(){
      LED1DIR |= LED1;
 }
+
+void setup_timer(int ms) {
+    TA0CCTL0 = CCIE;               // Enable Timer_A interrupt
+    TA0CCR0 = ms*10;               // Set the timer value for 5 seconds (adjust based on clock speed)
+    TA0CTL = TASSEL_2 + MC_1 + ID_3; // SMCLK, Up mode, Divider 8
+    // SMCLK is typically ~1MHz, so this setup works for 5-second intervals
+}
+

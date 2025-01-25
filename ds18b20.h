@@ -1,3 +1,8 @@
+/*
+Code modified from https://github.com/AGMLProjects/WFlow/blob/main/wflowembedded/MSP430/WFlow/ds18b20.h
+*/
+
+
 #ifndef DS18B20_H_
 #define DS18B20_H_
 

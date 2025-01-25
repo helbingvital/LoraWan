@@ -2,6 +2,8 @@
 #define HAL_MSP430_H
 
 #include "msp430g2553.h"
+#include <msp430.h>
+
 
 #define USER 'C'
 
@@ -41,6 +43,7 @@ void UART_send_string(const char *str);
 void UART_send_char(char c);
 void init_LED();
 void init_microcontroller();
+void setup_timer(int ms);
 
 #endif //HAL_MSP430
 
