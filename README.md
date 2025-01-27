@@ -46,12 +46,12 @@ To build and run this project, ensure you have the following:
 ### 2. Software Setup
 
 1. Open the project in **Code Composer Studio Theia**.
-2. Configure the LoRaWAN credentials:
-   - Retrieve the DevID and other parameters for your Wio-E5 module using AT commands. Also set the AppKey.
+2. Hardware set up in **'HAL_MSP430.h'**: Update Pin Configuration for UART, Sensor Data, Button, and LED. Set User.
+3. Configure the LoRaWAN credentials:
+   - Retrieve the DevID and other parameters for your Wio-E5 module using AT commands. To do so, set #define SETUP_MODE 1 in 'main.c'. Also set the AppKey.
    - Register the device and configure the IDs in your TTN dashboard. Change the AppKey in 'LoraWan2.c'.
    - Refer to the [Wio-E5 Module Documentation](https://wiki.seeedstudio.com/LoRa-E5_STM32WLE5JC_Module/) for details.
-3. If you used different pins for the connection with the temperature sensor, update the pin configuration in 'LoraWan2.h'.
-4. Confirm that the message identifiers used match the decoder on TTN. ('LoraWan2.h')
+5. Confirm that the message identifiers used match the decoder on TTN. ('LoraWan2.h')
    - If not change your device's uplink payload formatter in the TTN to the one in **`payloaddecoder.js`**.
 6. Compile the project.
 7. Flash the compiled code to the MSP430 microcontroller.
