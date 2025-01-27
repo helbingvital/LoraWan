@@ -98,10 +98,3 @@ void handle_button_press(void){
     UART_send_string(message);
 }
 //**********************************************************************************************************************************************************
-// Optional: ISR für empfangene Zeichen (z.B. um auf die Antwort des Moduls zu warten)
-#pragma vector=USCIAB0RX_VECTOR
-__interrupt void USCI0RX_ISR(void) {
-//    __enable_interrupt(); //enable ensted interrupts (for button)
-    char received_char = UCA0RXBUF;  // read received character
-    // add action on interrupt
-}

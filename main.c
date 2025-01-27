@@ -13,7 +13,6 @@
 
 #define SETUP_MODE 0 //1 if you want to get DevEui and AppEui
 char name[6];
-volatile unsigned int timer_flag = 0;  // Flag to indicate timer interrupt
 
 void main(void) {
     setUser();
@@ -23,7 +22,6 @@ void main(void) {
     init_button();              //initialize Button and interrupt
     init_LED();                 //initialize LED
     __enable_interrupt();
-
 //    Getting Started: 
 #if SETUP_MODE
     selftest(NONE);
@@ -42,24 +40,19 @@ void main(void) {
     } else {
         sprintf(status_msg, "AT+MSG=\"%s%c: Temperature Sensor is not connected.\"\r\n", STATUS_MSG, USER);    
     }
+    DELAY_MS(8000);
     UART_send_string(status_msg);
     
     DS18B20_PORT_OUT |= DS18B20_POWER_PIN; //temperature sensor: power on
     uint16_t sensorValue = 0;
 
     //Main Loop: Reoccurent Temperature Measurements sent via LoraWan
-    setup_timer(1);
     while (1) {
-        if(timer_flag){
-            sensorValue = ds18b20_get_temp();
-            send_Temperature(sensorValue);
-        //    DELAY_MS(5000);
-        //    __bis_SR_register(LPM0_bits + GIE);
-            // Toggle LED to visualize end of iteration.
-            LED_OUT ^= LED1;    
-            setup_timer(5);            
-        }
-        __bis_SR_register(LPM0_bits + GIE);                
+        sensorValue = ds18b20_get_temp();
+        send_Temperature(sensorValue);
+        // Toggle LED to visualize end of iteration.
+        LED_OUT ^= LED1;
+        DELAY_MS(8000);         
     }
 #endif
 }
@@ -75,18 +68,3 @@ void setUser() {
     }
 }
 
-#pragma vector=PORT1_VECTOR //move to hardware config.c
-__interrupt void Port_1_ISR(void) {
-    if (BUTTON_PIFG & BUTTON_PIN) {
-        handle_button_press();  
-        BUTTON_PIFG &= ~BUTTON_PIN;
-        __bic_SR_register_on_exit(LPM0_bits);
-    }
-}
-
-// Timer ISR
-#pragma vector=TIMER0_A0_VECTOR
-__interrupt void Timer_A(void) {
-    timer_flag = 1;                // Set the flag to indicate 5 seconds elapsed
-    __bic_SR_register_on_exit(LPM0_bits); // Exit LPM0 to allow main loop to run
-}
