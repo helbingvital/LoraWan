@@ -9,6 +9,7 @@ This repository contains the following resources:
 ### Source Code
 - **`main.c`**: Main application file for hardware initialization and LoRaWAN communication.
 - **`LoraWAN2.h`**: Header file with utilities and definitions for LoRaWAN functions.
+- **'HAL_MSP430.c'** / **'HAL_MSP430.h'**: Hardware Abstraction Layer. Pin configuration used in this setup and hardware specific funtionalities.
 - **`ds18b20.c`** / **`ds18b20.h`**: Source and header files for interacting with the DS18B20 temperature sensor.
 - **`payloaddecoder.js`**: Uplink Payload decoder used in TTN.
 
@@ -64,19 +65,6 @@ To build and run this project, ensure you have the following:
    - Read temperature data from the DS18B20 sensor.
    - Transmit the temperature data via LoRaWAN at regular intervals.
 3. View the transmitted data in real-time on the TTN live data console.
-
-## File Descriptions
-
-### Source Code
-- **`main.c`**: Core logic for the application, including hardware initialization and LoRaWAN communication.
-- **`LoraWAN2.h`**: Definitions and utility functions for LoRaWAN functionality.
-- **`ds18b20.c`** / **`ds18b20.h`**: Code for reading temperature data from the DS18B20 sensor.
-- **`payloaddecoder.js`**: Uplink Payload decoder used in TTN.
-
-### Hardware Files
-- **`LoraWAN_Platine_board.brd`**: PCB layout for the custom LoRaWAN hardware.
-- **`LoraWAN_Platine_schematic.sch`**: Schematic diagram for assembling the hardware.
-- **`hardware/3D Case MSP430 LoraWAN V2.f3d`**: Fusion file containing the design of the custom case for 3D printing.
 
 ## Contribution
 
