@@ -9,7 +9,7 @@ This repository contains the following resources:
 ### Source Code
 - **`main.c`**: Main application file for hardware initialization and LoRaWAN communication.
 - **`LoraWAN2.h`**: Header file with utilities and definitions for LoRaWAN functions.
-- **'HAL_MSP430.c'** / **'HAL_MSP430.h'**: Hardware Abstraction Layer. Pin configuration used in this setup and hardware specific funtionalities.
+- **`HAL_MSP430.c`** / **`HAL_MSP430.h`**: Hardware Abstraction Layer. Pin configuration used in this setup and hardware specific funtionalities.
 - **`ds18b20.c`** / **`ds18b20.h`**: Source and header files for interacting with the DS18B20 temperature sensor.
 - **`payloaddecoder.js`**: Uplink Payload decoder used in TTN.
 
