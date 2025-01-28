@@ -28,8 +28,6 @@ void main(void) {
 #else
     //Join Lora Gateway. Only necessary if disconnected.
     setup_gateway(USER); 
-    //JOIN: Join failed
-    // JOIN: Done
     char status_msg[50]; 
     sprintf(status_msg, "AT+MSG=\"%sHello, LoRa! This is %s\"\r\n", STATUS_MSG, name);
     // UART_send_string(status_msg);

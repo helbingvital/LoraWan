@@ -31,7 +31,10 @@ void UART_RXTEST() {
 * Join Lora Gateway. 
 *
 * Make sure to add your personal APPKEY*/
-void setup_gateway(char synonym){
+unsigned int setup_gateway(char synonym){
+    const char *msg_done = "JOIN: Done"; 
+    const char *msg_fail = "JOIN: Join failed"; 
+
     if (synonym == 'C') {
         UART_send_string("AT+KEY=APPKEY,\"B045041358B83A5E76F3C6312184CCC8\"\r\n"); // Set AppKey
     }
@@ -42,7 +45,23 @@ void setup_gateway(char synonym){
     UART_send_string("AT+CH=NUM,0-2\r\n");
     UART_send_string("AT+MODE=LWOTAA\r\n");
     UART_send_string("AT+JOIN\r\n");
-    DELAY_MS(7000);
+    int waited_time = 0;
+    int current_try = 0;
+    for (current_try=0; current_try < JOIN_TRIES; current_try++){
+        while (waited_time < JOIN_TIMEOUT) {
+            DELAY_MS(1000);
+            waited_time++;
+
+            // Check if "MSG: Done" or "MSGHEX: Done" is in the buffer
+            if (strstr(uart_buffer, msg_done)) {
+                return 1;  // Exit if Join is succesfull
+            }else if (strstr(uart_buffer, msg_fail)) {
+                break;
+            }
+        }
+    }
+    return 0;
+    // DELAY_MS(7000);
 }
 //**********************************************************************************************************************************************************
 /**
