@@ -95,8 +95,7 @@ void send_Temperature(uint16_t sensorValue){
     UART_send_string(message);
     // Wait for response or timeout
     int waited_time = 0;
-    int timeout = 10; //timeout in s
-    while (waited_time < timeout) {
+    while (waited_time < MSG_TIMEOUT) {
         DELAY_MS(1000);
         waited_time++;
 
@@ -117,55 +116,33 @@ void handle_button_press(void){
     char message[50];
     sprintf(message, "AT+MSG=\"%s%c:Button was pressed\"\r\n", STATUS_MSG, USER);
     send_lora_text_msg(message);
+    button_press=0; 
     // UART_send_string(message);
 }
 //**********************************************************************************************************************************************************
 void send_lora_text_msg(const char *message) {
-    int timeout = 10; //timeout in s
     const char *msg_done = "MSG: Done";
-    // const char *msghex_done = "MSGHEX: Done";
-    // int timeout = 10000;  // Timeout in milliseconds (adjust as needed)
-    
-    clear_uart_buffer();
 
-    // char message[50];
-    // Send the AT command
-    // for (int i = 0; message[i] != '\0'; i++) {
-    //     while (!(UCA0IFG & UCTXIFG));  // Wait for TX buffer to be ready
-    //     UCA0TXBUF = message[i];       // Send character
-    // }
+    clear_uart_buffer();  
     while (send_status) { //Modem is busy with last message, wait.
-        DELAY_US(100);
+        DELAY_US(100); //TODO irgendwann aufgeben, trotzdem senden
     }
     send_status = 1;
     UART_send_string(message);
 
-    // setup_timer(20000);
-    // while (!timer_flag) {
-    //     // Check if "MSG: Done" is in the buffer
-    //     if (strstr(uart_buffer, msg_done)) {
-    //         send_status = 0;
-    //         return;  // Exit if response is received
-    //     }
-    // }
     //MSG: Please join network first
 
     // Wait for response or timeout
     int waited_time = 0;
-    while (waited_time < timeout) {
+    while (waited_time < MSG_TIMEOUT) {
         DELAY_MS(1000);
         waited_time++;
 
         // Check if "MSG: Done" or "MSGHEX: Done" is in the buffer
         if (strstr(uart_buffer, msg_done)) {
-            send_status = 0;
+            send_status = 0; //set not busy
             return;  // Exit if response is received
         }
     }
-
-    // // Timeout: Delay before retrying
-    // for (int i = 0; i < 5000; i++) {
-    //     __delay_cycles(1000);  // 5-second delay
-    // }
     send_status = 0; //Send failed, still continue
 }

@@ -11,7 +11,7 @@
 //Define Identifiers for message types. Should match the identifiers configured in decoder.
 #define STATUS_MSG "$" // $ Asci = 0x24 = 36 (Decimal)
 #define DATA_MSG "C0" // 0xC0 = 192 (Decimal)
-
+#define MSG_TIMEOUT 10 //timeout in s
 
 void LORA_TEST();
 void UART_TXTEST();

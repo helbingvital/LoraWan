@@ -50,7 +50,7 @@ void setup_timer(int ms);
 void clear_uart_buffer(void);
 
 extern unsigned int timer_flag;
-
+extern unsigned int button_press;
 
 #endif //HAL_MSP430
 
@@ -66,8 +66,4 @@ extern unsigned int timer_flag;
 
 #endif /* DELAY_H_ */
 
-#ifndef STRING_FCT
-#define STRING_FCT
-int strings_equal(const char *str1, const char *str2);
-int substring_in_buffer(const char *buffer, const char *substring);
-#endif
+ 

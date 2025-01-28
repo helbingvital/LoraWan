@@ -22,6 +22,7 @@ void init_microcontroller(){
 }
 //**********************************************************************************************************************************************************
 unsigned int timer_flag = 0;
+unsigned int button_press = 0;
 //**********************************************************************************************************************************************************
 /** 
 * Configure UART on MSP430
@@ -125,7 +126,8 @@ __interrupt void USCI0RX_ISR(void) {
 #pragma vector=PORT1_VECTOR 
 __interrupt void Port_1_ISR(void) {
     if (BUTTON_PIFG & BUTTON_PIN) {
-        handle_button_press();  
+        button_press = 1;
+        // handle_button_press();  
         BUTTON_PIFG &= ~BUTTON_PIN;
     }
 }
@@ -134,37 +136,4 @@ __interrupt void Port_1_ISR(void) {
 #pragma vector=TIMER0_A0_VECTOR
 __interrupt void Timer_A(void) {
     timer_flag = 1;                // Set the flag to indicate timer elapsed
-}
-
-
-int strings_equal(const char *str1, const char *str2) {
-    while (*str1 && *str2) {
-        if (*str1 != *str2) {
-            return 0;  // Strings are not equal
-        }
-        str1++;
-        str2++;
-    }
-    return (*str1 == '\0' && *str2 == '\0');  // Ensure both strings end at the same time
-}
-
-int substring_in_buffer(const char *buffer, const char *substring) {
-    while (*buffer) {
-        const char *b = buffer;
-        const char *s = substring;
-
-        // Compare substring with part of the buffer
-        while (*b && *s && (*b == *s)) {
-            b++;
-            s++;
-        }
-
-        // If we reached the end of the substring, it's a match
-        if (*s == '\0') {
-            return 1;  // Substring found
-        }
-
-        buffer++;
-    }
-    return 0;  // Substring not found
 }

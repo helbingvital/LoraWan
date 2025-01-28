@@ -55,7 +55,10 @@ void main(void) {
         send_Temperature(sensorValue);
         // Toggle LED to visualize end of iteration.
         LED_OUT ^= LED1;
-        DELAY_MS(8000);         
+        if(button_press){
+            handle_button_press();
+        }
+        DELAY_MS(5000);         
     }
 #endif
 }
