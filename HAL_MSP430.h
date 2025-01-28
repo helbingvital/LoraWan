@@ -4,7 +4,6 @@
 #include "msp430g2553.h"
 #include <msp430.h>
 
-
 #define USER 'C'
 
 //Define pins according to your microcontroller hardware
@@ -26,6 +25,10 @@
 #define UART_TX BIT2
 #define BAUD 104 // Baudrate 9600 (1 MHz / 9600)
 
+#define UART_BUFFER_SIZE 128
+extern char uart_buffer[UART_BUFFER_SIZE];  // UART buffer for storing received data
+extern int buffer_index;          // Buffer index for tracking position
+
 //Temperature Sensor
 // DQ-Pin und Power-Pin definieren for temperature sensor
 #define DQ_PIN BIT4 // P1.4
@@ -44,6 +47,10 @@ void UART_send_char(char c);
 void init_LED();
 void init_microcontroller();
 void setup_timer(int ms);
+void clear_uart_buffer(void);
+
+extern unsigned int timer_flag;
+extern unsigned int button_press;
 
 #endif //HAL_MSP430
 
@@ -59,5 +66,4 @@ void setup_timer(int ms);
 
 #endif /* DELAY_H_ */
 
-
-
+ 

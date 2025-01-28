@@ -1,9 +1,14 @@
+/*
+Code modified from https://github.com/AGMLProjects/WFlow/blob/main/wflowembedded/MSP430/WFlow/ds18b20.h
+*/
+
 #include "intrinsics.h"
 #include <ds18b20.h>
 #include <HAL_MSP430.h>
  
  // GPIO Konfiguration
-void ds18b20_init_pins() {
+void ds18b20_init_pins() 
+{
     P1DIR |= DS18B20_POWER_PIN;     // Set Power Pin of temperature sensor as output on microcontroller
     P1OUT &= ~DS18B20_POWER_PIN;    // Set output of power pin to low, power off
     P1DIR |= DS18B20_PORT_PIN;        // Set Data Pin as output

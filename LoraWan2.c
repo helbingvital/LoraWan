@@ -1,6 +1,7 @@
 #include <LoraWAN2.h>
 #include "msp430g2553.h"
 
+unsigned int send_status = 0; //0 send not in progress, 1 sent in progress
 //**********************************************************************************************************************************************************
 void UART_TXTEST() {
     // Set test mode
@@ -29,8 +30,14 @@ void UART_RXTEST() {
 /** 
 * Join Lora Gateway. 
 *
-* Make sure to add your personal APPKEY*/
-void setup_gateway(char synonym){
+* Make sure to add your personal APPKEY
+* Request is time out after JOIN_TIMEOUT seconds and retried JOIN_TRIES times.
+*/
+unsigned int setup_gateway(char synonym){
+    const char *msg_done = "JOIN: Done"; 
+    const char *msg_fail = "JOIN: Join failed"; 
+    clear_uart_buffer();
+
     if (synonym == 'C') {
         UART_send_string("AT+KEY=APPKEY,\"B045041358B83A5E76F3C6312184CCC8\"\r\n"); // Set AppKey
     }
@@ -40,8 +47,25 @@ void setup_gateway(char synonym){
     UART_send_string("AT+DR=EU868\r\n");
     UART_send_string("AT+CH=NUM,0-2\r\n");
     UART_send_string("AT+MODE=LWOTAA\r\n");
+    clear_uart_buffer();
+
     UART_send_string("AT+JOIN\r\n");
-    DELAY_MS(7000);
+    int waited_time = 0;
+    
+    while (waited_time < JOIN_TIMEOUT) {
+        DELAY_MS(1000);
+        waited_time++;
+
+        // Check if "MSG: Done" or "MSGHEX: Done" is in the buffer
+        if (strstr(uart_buffer, msg_done)) {
+            return 1;  // Exit if Join is succesfull
+        }else if (strstr(uart_buffer, msg_fail)) {
+            UART_send_string("AT+JOIN\r\n");
+            continue;
+        }
+    }
+    
+    return 0;
 }
 //**********************************************************************************************************************************************************
 /**
@@ -71,12 +95,16 @@ void selftest(Mode mode){
 /**
  * Format and send SensorValue (from ds18b20 Temperature Sensor) 
  *
- * Format SensorValue in order to send as Hex. Lookup Hex representation of each Nibble. Send Hex message to LoraChip via UART.
+ * Format SensorValue in order to send as Hex. Lookup Hex representation of each Nibble. Send Hex message to LoraChip via UART. Wait until processing is finished.
  *
  * @param sensorValue 16bit value. Bit 4-11 specify temperature, bit 12-15 specify fraction (1/16) (in accordance to ds18b20 specification)
  */
-void send_Temperature(uint16_t sensorValue){
+unsigned int send_Temperature(uint16_t sensorValue){
+    clear_uart_buffer();
+    const char *msghex_done = "MSGHEX: Done";
+    const char *msg_disconnect = "MSGHEX: Please join network first";
     char hex_lookup[16] = "0123456789ABCDEF";
+
     // Format message
     char message[50];
     char char_3 = hex_lookup[(sensorValue & 0x000F)];
@@ -84,9 +112,35 @@ void send_Temperature(uint16_t sensorValue){
     char char_2 = hex_lookup[(sensorValue & 0x000F)];
     sensorValue = sensorValue >> 4;
     char char_1 = hex_lookup[(sensorValue & 0x000F)];
+    int waited_time = 0;
+    //If previous message isn't processed, wait for timeout and then continue anyways
+    while (waited_time < MSG_TIMEOUT && send_status) {
+        DELAY_US(100);
+        waited_time++;
 
+    }
+    send_status = 1;
     sprintf(message, "AT+MSGHEX=\"%s0%c%c%c\"\r\n", DATA_MSG, char_1, char_2, char_3);
     UART_send_string(message);
+
+    // Wait for response or timeout
+    waited_time = 0;
+    while (waited_time < MSG_TIMEOUT) {
+        DELAY_MS(1000);
+        waited_time++;
+
+        // Check if "MSG: Done" or "MSGHEX: Done" is in the buffer
+        if (strstr(uart_buffer, msghex_done)) {
+            send_status = 0;
+            return 1;  // Exit if response is received
+        }else if (strstr(uart_buffer, msg_disconnect)) {
+            setup_gateway(USER); //reconnect to Gateway
+            send_status = 0; //give up on this try and return
+            return 0;
+        }
+    }
+    send_status = 0; //Send failed, still continue
+    return 0;
 }
 //**********************************************************************************************************************************************************
 /**
@@ -95,6 +149,39 @@ void send_Temperature(uint16_t sensorValue){
 void handle_button_press(void){
     char message[50];
     sprintf(message, "AT+MSG=\"%s%c:Button was pressed\"\r\n", STATUS_MSG, USER);
-    UART_send_string(message);
+    send_lora_text_msg(message);
+    button_press=0; 
+    // UART_send_string(message);
 }
 //**********************************************************************************************************************************************************
+unsigned int send_lora_text_msg(const char *message) {
+    const char *msg_done = "MSG: Done";
+    const char *msg_disconnect = "MSG: Please join network first";
+
+    clear_uart_buffer(); 
+    int waited_time = 0; 
+    while (waited_time < MSG_TIMEOUT && send_status) { //Modem is busy with last message, wait.
+        DELAY_US(100);
+    }
+    send_status = 1;
+    UART_send_string(message);
+
+    // Wait for response or timeout
+    waited_time = 0;
+    while (waited_time < MSG_TIMEOUT) {
+        DELAY_MS(1000);
+        waited_time++;
+
+        // Check if "MSG: Done" or "MSGHEX: Done" is in the buffer
+        if (strstr(uart_buffer, msg_done)) {
+            send_status = 0; //set not busy
+            return 1;  // Exit if response is received
+        } else if (strstr(uart_buffer, msg_disconnect)) {
+            setup_gateway(USER); //reconnect to Gateway
+            send_status = 0; //give up on this try
+            return 0;
+        }
+    }
+    send_status = 0; //Send failed, still continue
+    return 0;
+}

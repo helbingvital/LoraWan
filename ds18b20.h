@@ -23,12 +23,12 @@ Code modified from https://github.com/AGMLProjects/WFlow/blob/main/wflowembedded
 #define DS18B20_LO  { DS18B20_PORT_DIR |= DS18B20_PORT_PIN; DS18B20_PORT_REN &= ~DS18B20_PORT_PIN; DS18B20_PORT_OUT &= ~DS18B20_PORT_PIN; } 
 #define DS18B20_HI  { DS18B20_PORT_DIR |= DS18B20_PORT_PIN; DS18B20_PORT_REN &= ~DS18B20_PORT_PIN; DS18B20_PORT_OUT |= DS18B20_PORT_PIN; }
 #define DS18B20_RLS { DS18B20_PORT_DIR &= ~DS18B20_PORT_PIN; DS18B20_PORT_REN |= DS18B20_PORT_PIN; DS18B20_PORT_OUT  |= DS18B20_PORT_PIN; }
-#define DS18B20_IN  (DS18B20_PORT_IN & DS18B20_PORT_PIN)
+#define DS18B20_IN  ( DS18B20_PORT_IN & DS18B20_PORT_PIN )
 
 // Function prototypes
-//void ds18b20_init_port(void);
-void ds18b20_init_pins();
-
+// void ds18b20_init_port(void);
+//**********************************************************************************************************************************************************
+void ds18b20_init_pins(void);
 uint8_t ds18b20_reset();
 void ds18b20_write_bit(uint8_t);
 uint8_t ds18b20_read_bit();
