@@ -1,6 +1,7 @@
 #include <LoraWAN2.h>
 #include "msp430g2553.h"
 
+unsigned int send_status = 0; //0 send not in progress, 1 sent in progress
 //**********************************************************************************************************************************************************
 void UART_TXTEST() {
     // Set test mode
@@ -76,6 +77,8 @@ void selftest(Mode mode){
  * @param sensorValue 16bit value. Bit 4-11 specify temperature, bit 12-15 specify fraction (1/16) (in accordance to ds18b20 specification)
  */
 void send_Temperature(uint16_t sensorValue){
+    clear_uart_buffer();
+    const char *msghex_done = "MSGHEX: Done";
     char hex_lookup[16] = "0123456789ABCDEF";
     // Format message
     char message[50];
@@ -84,9 +87,27 @@ void send_Temperature(uint16_t sensorValue){
     char char_2 = hex_lookup[(sensorValue & 0x000F)];
     sensorValue = sensorValue >> 4;
     char char_1 = hex_lookup[(sensorValue & 0x000F)];
-
+    while (send_status) { //Modem is busy with last message, wait.
+        DELAY_US(100);
+    }
+    send_status = 1;
     sprintf(message, "AT+MSGHEX=\"%s0%c%c%c\"\r\n", DATA_MSG, char_1, char_2, char_3);
     UART_send_string(message);
+    // Wait for response or timeout
+    int waited_time = 0;
+    int timeout = 10; //timeout in s
+    while (waited_time < timeout) {
+        DELAY_MS(1000);
+        waited_time++;
+
+        // Check if "MSG: Done" or "MSGHEX: Done" is in the buffer
+        if (strstr(uart_buffer, msghex_done)) {
+            send_status = 0;
+            return;  // Exit if response is received
+        }
+    }
+        send_status = 0; //Send failed, still continue
+
 }
 //**********************************************************************************************************************************************************
 /**
@@ -95,6 +116,56 @@ void send_Temperature(uint16_t sensorValue){
 void handle_button_press(void){
     char message[50];
     sprintf(message, "AT+MSG=\"%s%c:Button was pressed\"\r\n", STATUS_MSG, USER);
-    UART_send_string(message);
+    send_lora_text_msg(message);
+    // UART_send_string(message);
 }
 //**********************************************************************************************************************************************************
+void send_lora_text_msg(const char *message) {
+    int timeout = 10; //timeout in s
+    const char *msg_done = "MSG: Done";
+    // const char *msghex_done = "MSGHEX: Done";
+    // int timeout = 10000;  // Timeout in milliseconds (adjust as needed)
+    
+    clear_uart_buffer();
+
+    // char message[50];
+    // Send the AT command
+    // for (int i = 0; message[i] != '\0'; i++) {
+    //     while (!(UCA0IFG & UCTXIFG));  // Wait for TX buffer to be ready
+    //     UCA0TXBUF = message[i];       // Send character
+    // }
+    while (send_status) { //Modem is busy with last message, wait.
+        DELAY_US(100);
+    }
+    send_status = 1;
+    UART_send_string(message);
+
+    // setup_timer(20000);
+    // while (!timer_flag) {
+    //     // Check if "MSG: Done" is in the buffer
+    //     if (strstr(uart_buffer, msg_done)) {
+    //         send_status = 0;
+    //         return;  // Exit if response is received
+    //     }
+    // }
+    //MSG: Please join network first
+
+    // Wait for response or timeout
+    int waited_time = 0;
+    while (waited_time < timeout) {
+        DELAY_MS(1000);
+        waited_time++;
+
+        // Check if "MSG: Done" or "MSGHEX: Done" is in the buffer
+        if (strstr(uart_buffer, msg_done)) {
+            send_status = 0;
+            return;  // Exit if response is received
+        }
+    }
+
+    // // Timeout: Delay before retrying
+    // for (int i = 0; i < 5000; i++) {
+    //     __delay_cycles(1000);  // 5-second delay
+    // }
+    send_status = 0; //Send failed, still continue
+}

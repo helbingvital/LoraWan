@@ -17,7 +17,11 @@ void init_microcontroller(){
     BCSCTL1 = CALBC1_1MHZ;      
     DCOCTL = CALDCO_1MHZ;       // set DCO to 1 MHz
 
+    timer_flag = 0;
+
 }
+//**********************************************************************************************************************************************************
+unsigned int timer_flag = 0;
 //**********************************************************************************************************************************************************
 /** 
 * Configure UART on MSP430
@@ -80,16 +84,37 @@ void init_LED(){
 * Can be used instead of DELAY(MS), calls interrupt after ms
 */
 void setup_timer(int ms) {
+    timer_flag=0;
     TA0CCTL0 |= CCIE;               // Enable Timer_A interrupt
     TA0CCR0 = ms*10;               // Set the timer value
     TA0CTL = TASSEL_2 + MC_1 + ID_3; // Select SMCLK, use up mode, use divider 8 (compatible to SMLCK if 1MHz)
+}
+//**********************************************************************************************************************************************************
+char uart_buffer[UART_BUFFER_SIZE] = {0};  // UART buffer for received data
+int buffer_index = 0;            // Buffer index
+//**********************************************************************************************************************************************************
+void clear_uart_buffer(void) {
+    int i = 0;
+    for (i=0; i < UART_BUFFER_SIZE; i++){
+        uart_buffer[i] = '\0';
+    }    
+    buffer_index = 0;
 }
 //**********************************************************************************************************************************************************
 // UART RX interrupt
 //necessary to clear buffer to prevent overflow and maintain UART functionalities
 #pragma vector=USCIAB0RX_VECTOR
 __interrupt void USCI0RX_ISR(void) {
-    char received_char = UCA0RXBUF;  // read received character and clear buffer
+    // if (UCA0IFG & UCRXIFG) {
+        char received_char = UCA0RXBUF;  // read received character and clear buffer
+        if (received_char == '+'){
+            clear_uart_buffer();
+        }
+        if (buffer_index < UART_BUFFER_SIZE - 1) {
+            uart_buffer[buffer_index++] = received_char;
+            uart_buffer[buffer_index] = '\0'; // Null-terminate the string
+        }
+    // }
 }
 //**********************************************************************************************************************************************************
 /**
@@ -103,4 +128,43 @@ __interrupt void Port_1_ISR(void) {
         handle_button_press();  
         BUTTON_PIFG &= ~BUTTON_PIN;
     }
+}
+//**********************************************************************************************************************************************************
+// Timer ISR
+#pragma vector=TIMER0_A0_VECTOR
+__interrupt void Timer_A(void) {
+    timer_flag = 1;                // Set the flag to indicate timer elapsed
+}
+
+
+int strings_equal(const char *str1, const char *str2) {
+    while (*str1 && *str2) {
+        if (*str1 != *str2) {
+            return 0;  // Strings are not equal
+        }
+        str1++;
+        str2++;
+    }
+    return (*str1 == '\0' && *str2 == '\0');  // Ensure both strings end at the same time
+}
+
+int substring_in_buffer(const char *buffer, const char *substring) {
+    while (*buffer) {
+        const char *b = buffer;
+        const char *s = substring;
+
+        // Compare substring with part of the buffer
+        while (*b && *s && (*b == *s)) {
+            b++;
+            s++;
+        }
+
+        // If we reached the end of the substring, it's a match
+        if (*s == '\0') {
+            return 1;  // Substring found
+        }
+
+        buffer++;
+    }
+    return 0;  // Substring not found
 }
