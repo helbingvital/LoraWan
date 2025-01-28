@@ -10,19 +10,7 @@ void ds18b20_init_pins() {
     P1OUT |= DS18B20_PORT_PIN;        // Set Data pin as High
 }
 
-// DS18B20: Reset Impuls
-/*
-unsigned char ds18b20_reset() {
-    unsigned char presence;
-    P1OUT &= ~DS18B20_PORT_PIN;       // DQ auf Low ziehen
-    P1DIR |= DS18B20_PORT_PIN;        // DQ als Ausgang
-    DELAY_US(480);          // Halte Low für 480µs
-    P1DIR &= ~DS18B20_PORT_PIN;       // DQ als Eingang
-    DELAY_US(70);           // Warte 70µs
-    presence = (P1IN & DS18B20_PORT_PIN); // Lese Präsenzsignal
-    DELAY_US(410);          // Warte den Rest der Periode
-    return presence == 0 ? 1 : 0; // 1 = Sensor vorhanden, 0 = kein Sensor
-}*/
+
 uint8_t ds18b20_reset(void)
 {
     DS18B20_LO

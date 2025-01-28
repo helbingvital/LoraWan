@@ -1,3 +1,8 @@
+/*
+Code modified from https://github.com/AGMLProjects/WFlow/blob/main/wflowembedded/MSP430/WFlow/ds18b20.h
+*/
+
+
 #ifndef DS18B20_H_
 #define DS18B20_H_
 
@@ -32,9 +37,6 @@ uint8_t ds18b20_read_byte();
 uint16_t ds18b20_read_temp_registers(void);
 uint64_t ds18b20_read_rom (void);
 uint16_t ds18b20_get_temp(void);
-//void delay_us(uint16_t);
-//void delay_ms(uint16_t);
-//void set_clock(void);
 
 #endif /* DS18B20_H_ */
 

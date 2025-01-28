@@ -1,4 +1,5 @@
 #include <HAL_MSP430.h>
+#include <LoraWAN2.h>
 /**
 * Initialize MSP 430
 *
@@ -44,6 +45,7 @@ void init_button(){
 
     // Enable interrupts
     BUTTON_PINTERRUPT |= BUTTON_PIN;        // Enable interrupt
+    // BUTTON_PINTERRUPT = 0x00;
     BUTTON_PTRIGGER |= BUTTON_PIN;          // Trigger on high-to-low transition (button press)
     BUTTON_PIFG &= ~BUTTON_PIN;             // Clear interrupt flag 
 
@@ -56,7 +58,7 @@ void UART_send_string(const char *str) {
     while (*str) {
         UART_send_char(*str++);
     }
-    DELAY_MS(1000);
+    DELAY_MS(3000);
 }
 //**********************************************************************************************************************************************************
 /** 
@@ -70,4 +72,35 @@ void UART_send_char(char c) {
 * Set LED Pin to output direction*/
 void init_LED(){
      LED1DIR |= LED1;
+}
+//**********************************************************************************************************************************************************
+/** 
+* Configure Timer Module on MSP430 and start timer
+*
+* Can be used instead of DELAY(MS), calls interrupt after ms
+*/
+void setup_timer(int ms) {
+    TA0CCTL0 |= CCIE;               // Enable Timer_A interrupt
+    TA0CCR0 = ms*10;               // Set the timer value
+    TA0CTL = TASSEL_2 + MC_1 + ID_3; // Select SMCLK, use up mode, use divider 8 (compatible to SMLCK if 1MHz)
+}
+//**********************************************************************************************************************************************************
+// UART RX interrupt
+//necessary to clear buffer to prevent overflow and maintain UART functionalities
+#pragma vector=USCIAB0RX_VECTOR
+__interrupt void USCI0RX_ISR(void) {
+    char received_char = UCA0RXBUF;  // read received character and clear buffer
+}
+//**********************************************************************************************************************************************************
+/**
+*Interrupt Routine for Button Press
+*
+*Call function to take action on Button press and clear flag.
+*/
+#pragma vector=PORT1_VECTOR 
+__interrupt void Port_1_ISR(void) {
+    if (BUTTON_PIFG & BUTTON_PIN) {
+        handle_button_press();  
+        BUTTON_PIFG &= ~BUTTON_PIN;
+    }
 }

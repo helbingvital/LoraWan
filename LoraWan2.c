@@ -41,7 +41,7 @@ void setup_gateway(char synonym){
     UART_send_string("AT+CH=NUM,0-2\r\n");
     UART_send_string("AT+MODE=LWOTAA\r\n");
     UART_send_string("AT+JOIN\r\n");
-    DELAY_MS(5000);
+    DELAY_MS(7000);
 }
 //**********************************************************************************************************************************************************
 /**
@@ -98,9 +98,3 @@ void handle_button_press(void){
     UART_send_string(message);
 }
 //**********************************************************************************************************************************************************
-// // Optional: ISR für empfangene Zeichen (z.B. um auf die Antwort des Moduls zu warten)
-// #pragma vector=USCIAB0RX_VECTOR
-// __interrupt void USCI0RX_ISR(void) {
-//     char received_char = UCA0RXBUF;  // read received character
-//     // add action on interrupt
-// }

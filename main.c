@@ -12,7 +12,6 @@
 #endif
 
 #define SETUP_MODE 0 //1 if you want to get DevEui and AppEui
-
 char name[6];
 
 void main(void) {
@@ -23,7 +22,6 @@ void main(void) {
     init_button();              //initialize Button and interrupt
     init_LED();                 //initialize LED
     __enable_interrupt();
-
 //    Getting Started: 
 #if SETUP_MODE
     selftest(NONE);
@@ -42,6 +40,7 @@ void main(void) {
     } else {
         sprintf(status_msg, "AT+MSG=\"%s%c: Temperature Sensor is not connected.\"\r\n", STATUS_MSG, USER);    
     }
+    DELAY_MS(8000);
     UART_send_string(status_msg);
     
     DS18B20_PORT_OUT |= DS18B20_POWER_PIN; //temperature sensor: power on
@@ -52,7 +51,8 @@ void main(void) {
         sensorValue = ds18b20_get_temp();
         send_Temperature(sensorValue);
         // Toggle LED to visualize end of iteration.
-        LED_OUT ^= LED1;                                
+        LED_OUT ^= LED1;
+        DELAY_MS(8000);         
     }
 #endif
 }
@@ -68,10 +68,3 @@ void setUser() {
     }
 }
 
-#pragma vector=PORT1_VECTOR //move to hardware config.c
-__interrupt void Port_1_ISR(void) {
-    if (BUTTON_PIFG & BUTTON_PIN) {
-        handle_button_press();  
-        BUTTON_PIFG &= ~BUTTON_PIN;
-    }
-}
