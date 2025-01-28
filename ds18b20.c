@@ -1,3 +1,7 @@
+/*
+Code modified from https://github.com/AGMLProjects/WFlow/blob/main/wflowembedded/MSP430/WFlow/ds18b20.h
+*/
+
 #include "intrinsics.h"
 #include <ds18b20.h>
 #include <HAL_MSP430.h>
