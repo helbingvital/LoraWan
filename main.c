@@ -1,5 +1,5 @@
 
-#include <LoraWAN2.h>
+#include <LoraWAN.h>
 #include <ds18b20.h>
 
 #define MSP430

@@ -1,4 +1,4 @@
-#include <LoraWAN2.h>
+#include <LoraWAN.h>
 #include "msp430g2553.h"
 
 unsigned int send_status = 0; //0 send not in progress, 1 sent in progress
